@@ -1,5 +1,3 @@
 node_modules/
 *~
-fan-codes.json
-fan-codes.csv
-fan-codes.json.csv
+fan-codes.*

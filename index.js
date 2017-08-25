@@ -5,7 +5,10 @@ const fs   = require('fs')
 const path = require('path')
 const csv  = require('csv')
 
-const IN_FILE_ENCODING = 'utf8'
+const COMMA = ','
+const PRETTY_OUT_JSON   = true
+const PRETTY_TAB_SIZE   = 4
+const IN_FILE_ENCODING  = 'utf8'
 const OUT_FILE_ENCODING = 'utf8'
 const FIELD = {
   LOCATION: 'location',
@@ -30,6 +33,12 @@ class Exception {
 }
 
 class Club {
+  static is1stLevel(csv_club){
+    if( csv_club[0].trim() !== '' ) {
+      return true
+    }
+    return false
+  }
   static toCsv(club, deep = 0){
     let csv = []
 
@@ -41,7 +50,21 @@ class Club {
     csv.push(club[FIELD.CODE])
     csv.push(club[FIELD.LABEL])
 
-    return csv.join(',') + os.EOL
+    let lastComma = (deep === 0)? ',' : ''
+
+    return csv.join(COMMA) + lastComma + os.EOL
+  }
+  static fromCsv(csv_club){
+    let club = {}
+    let iter = 0
+    if( Club.is1stLevel(csv_club) ){
+      iter++
+    }
+    club[FIELD.LOCATION] = csv_club[iter++]
+    club[FIELD.LABEL] = csv_club[iter++]
+    club[FIELD.CODE] = csv_club[iter++]
+
+    return club
   }
   static isEmpty(club){
     if( ! club[FIELD.LOCATION].trim().length ) return true
@@ -53,10 +76,27 @@ class Club {
 
 class CsvJsonConverter {
   static csv2json(csv){
-    if( ! (json instanceof Array) ){
+    if( ! (csv instanceof Array) ){
       throw new Exception('(CsvJsonConverter::csv2json) ' + '`csv` must be array')
     }
-    return null
+
+    let json = []
+    let lastClub = {}
+
+    for (let csv_club of csv) {
+      let club = Club.fromCsv(csv_club)
+      if( Club.is1stLevel(csv_club) ){
+        json.push(club)
+        lastClub = club
+      } else {
+        if( typeof lastClub[FIELD.BRANCHES] === 'undefined' ){
+          lastClub[FIELD.BRANCHES] = []
+        }
+        lastClub[FIELD.BRANCHES].push(club)
+      }
+    }
+
+    return json
   }
   static json2csv(json, deep = 0){
     if( ! (json instanceof Array) ){
@@ -74,6 +114,18 @@ class CsvJsonConverter {
 
     return csv
   }
+}
+
+function parseCsv(data){
+  return new Promise((resolve,reject)=>{
+    csv.parse(data, (err, data)=>{
+      if(err){
+        reject(err)
+      } else {
+        resolve(data)
+      }
+    })
+  })
 }
 
 function readTextFile(filename){
@@ -110,10 +162,27 @@ class Application {
     try {
       for(let file of this.files){
         let data = await readTextFile(file)
-            data = JSON.parse(data)
-            data = await CsvJsonConverter.json2csv(data)
-            await writeTextFile(file+'.csv', data)
-            console.log(data)
+        let outFilename = file
+
+        if( /.+\.csv$/.test(file) ){
+          outFilename = outFilename + '.json'
+          data = await parseCsv(data)
+          data = CsvJsonConverter.csv2json(data)
+          data = JSON.stringify(data, null, PRETTY_TAB_SIZE * PRETTY_OUT_JSON)
+
+        } else if( /.+\.json$/.test(file) ){
+          outFilename = outFilename + '.csv'
+          data = JSON.parse(data)
+          data = CsvJsonConverter.json2csv(data)
+
+        } else {
+          console.log('Unrecognized file extension')
+          return false
+        }
+
+        await writeTextFile(outFilename, data)
+        console.log(data)
+        return true
       }
     } catch(e){
       console.log(e)
