@@ -26,7 +26,7 @@ class Exception {
   toString(){
     let msg = `[${this.name}] ${this.message}`
     if(this.value != null){
-      msg += '\n' + JSON.stringify(this.value, null, 2)
+      msg += os.EOL + JSON.stringify(this.value, null, 2)
     }
     return msg
   }
@@ -50,14 +50,14 @@ class Club {
     csv.push(club[FIELD.CODE])
     csv.push(club[FIELD.LABEL])
 
-    let lastComma = (deep === 0)? ',' : ''
+    let lastComma = (deep === 0)? COMMA : ''
 
     return csv.join(COMMA) + lastComma + os.EOL
   }
   static fromCsv(csv_club){
     let club = {}
     let iter = 0
-    if( Club.is1stLevel(csv_club) ){
+    if( ! Club.is1stLevel(csv_club) ){
       iter++
     }
     club[FIELD.LOCATION] = csv_club[iter++]
