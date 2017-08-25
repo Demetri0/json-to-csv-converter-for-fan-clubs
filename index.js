@@ -5,9 +5,13 @@ const fs   = require('fs')
 const path = require('path')
 const csv  = require('csv')
 
-const COMMA = ','
+const SYMBOL = {
+  COMMA: ',',
+  EOL: os.EOL
+}
+
 const PRETTY_OUT_JSON   = true
-const PRETTY_TAB_SIZE   = 4
+const PRETTY_TAB_SIZE   = 2
 const IN_FILE_ENCODING  = 'utf8'
 const OUT_FILE_ENCODING = 'utf8'
 const FIELD = {
@@ -26,7 +30,7 @@ class Exception {
   toString(){
     let msg = `[${this.name}] ${this.message}`
     if(this.value != null){
-      msg += os.EOL + JSON.stringify(this.value, null, 2)
+      msg += SYMBOL.EOL + JSON.stringify(this.value, null, 2)
     }
     return msg
   }
@@ -34,7 +38,7 @@ class Exception {
 
 class Club {
   static is1stLevel(csv_club){
-    if( csv_club[0].trim() !== '' ) {
+    if( (csv_club[0].trim() !== '') || (csv_club[3].trim() === '') ) {
       return true
     }
     return false
@@ -50,9 +54,9 @@ class Club {
     csv.push(club[FIELD.CODE])
     csv.push(club[FIELD.LABEL])
 
-    let lastComma = (deep === 0)? COMMA : ''
+    let lastComma = (deep === 0)? SYMBOL.COMMA : ''
 
-    return csv.join(COMMA) + lastComma + os.EOL
+    return csv.join(SYMBOL.COMMA) + lastComma + SYMBOL.EOL
   }
   static fromCsv(csv_club){
     let club = {}
@@ -61,8 +65,8 @@ class Club {
       iter++
     }
     club[FIELD.LOCATION] = csv_club[iter++]
-    club[FIELD.LABEL] = csv_club[iter++]
     club[FIELD.CODE] = csv_club[iter++]
+    club[FIELD.LABEL] = csv_club[iter++]
 
     return club
   }
@@ -181,7 +185,7 @@ class Application {
         }
 
         await writeTextFile(outFilename, data)
-        console.log(data)
+        // console.log(data)
         return true
       }
     } catch(e){
