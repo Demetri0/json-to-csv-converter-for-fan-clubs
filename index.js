@@ -22,14 +22,14 @@ const FIELD = {
 }
 
 class Exception {
-  constructor(msg, data = null){
+  constructor(msg, data = null, name = 'Exception'){
     this.message = msg
-    this.name    = 'Exception'
+    this.name    = name
     this.value   = data
   }
   toString(){
     let msg = `[${this.name}] ${this.message}`
-    if(this.value != null){
+    if(this.value !== null){
       msg += SYMBOL.EOL + JSON.stringify(this.value, null, 2)
     }
     return msg
@@ -89,6 +89,9 @@ class CsvJsonConverter {
 
     for (let csv_club of csv) {
       let club = Club.fromCsv(csv_club)
+      if( Club.isEmpty(club) ){
+        throw new Exception('One or mere Club field is empty', club, 'EmptyClubException')
+      }
       if( Club.is1stLevel(csv_club) ){
         json.push(club)
         lastClub = club
@@ -110,6 +113,9 @@ class CsvJsonConverter {
     let csv  = ''
 
     for(let club of json){
+      if( Club.isEmpty(club) ){
+        throw new Exception('One or more Club field is empty', club, 'EmptyClubException')
+      }
       csv += Club.toCsv(club, deep)
       if( !! club[FIELD.BRANCHES] ){
         csv += CsvJsonConverter.json2csv(club[FIELD.BRANCHES], deep+1)
