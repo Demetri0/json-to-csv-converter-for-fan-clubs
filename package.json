@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"if [[ $(node --version) == v8.* ]]; then echo 'PASS'; else echo 'FAIL\nnode major version must be grether then 8, currently $(node --version)'; fi\" | bash ",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
