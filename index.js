@@ -189,7 +189,8 @@ class Application {
             outFileName = outFileName.replace(/\.json$/, '')
 
         if( /.+\.csv$/.test(file) ){
-          outFileName = outFileName + '.json'
+          let date = (new Date()).toLocaleDateString()
+          outFileName = `[${date}] ${outFileName}.json`
           data = await parseCsv(data)
           data = CsvJsonConverter.csv2json(data)
           data = stripHeader(data)
