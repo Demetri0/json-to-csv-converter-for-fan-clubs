@@ -21,6 +21,11 @@ const FIELD = {
   LABEL:    'label',
   BRANCHES: 'branches'
 }
+const HEADER = {
+    CODE: 'Code',
+    TITLE: 'Title',
+    LOCATION: 'Location'
+}
 
 class Exception {
   constructor(msg, data = null, name = 'Exception'){
@@ -163,6 +168,12 @@ function writeTextFile(filename, data){
   })
 }
 
+function stripHeader(data){
+    return data.filter(function(club){
+        return club.code !== HEADER.CODE && club.location !== HEADER.LOCATION && club.title !== HEADER.TITLE
+    })
+}
+
 class Application {
   constructor(args){
     this.args  = args
@@ -179,6 +190,7 @@ class Application {
           outFilename = outFilename + '.json'
           data = await parseCsv(data)
           data = CsvJsonConverter.csv2json(data)
+          data = stripHeader(data)
           data = JSON.stringify(data, null, PRETTY_TAB_SIZE * PRETTY_OUT_JSON)
 
         } else if( /.+\.json$/.test(file) ){
