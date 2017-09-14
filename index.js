@@ -184,17 +184,19 @@ class Application {
     try {
       for(let file of this.files){
         let data = await readTextFile(file)
-        let outFilename = file
+        let outFileName = file
+            outFileName = outFileName.replace(/\.csv$/, '')
+            outFileName = outFileName.replace(/\.json$/, '')
 
         if( /.+\.csv$/.test(file) ){
-          outFilename = outFilename + '.json'
+          outFileName = outFileName + '.json'
           data = await parseCsv(data)
           data = CsvJsonConverter.csv2json(data)
           data = stripHeader(data)
           data = JSON.stringify(data, null, PRETTY_TAB_SIZE * PRETTY_OUT_JSON)
 
         } else if( /.+\.json$/.test(file) ){
-          outFilename = outFilename + '.csv'
+          outFilename = outFileName + '.csv'
           data = JSON.parse(data)
           data = CsvJsonConverter.json2csv(data)
 
@@ -203,7 +205,7 @@ class Application {
           return false
         }
 
-        await writeTextFile(outFilename, data)
+        await writeTextFile(outFileName, data)
         // console.log(data)
         return true
       }
