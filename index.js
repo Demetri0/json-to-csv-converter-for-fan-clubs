@@ -1,10 +1,32 @@
 #!/usr/bin/env node
 'use strict'
 
-const os   = require("os")
-const fs   = require('fs')
-const path = require('path')
-const csv  = require('csv')
+const os    = require("os")
+const fs    = require('fs')
+const path  = require('path')
+const csv   = require('csv')
+const fetch = require('node-fetch')
+
+function makeLinkToDoc(opt) {
+  let link = opt.BASE_URL
+  link = link.replace('{key}', opt.DOC_KEY)
+  link = link.replace('{format}', opt.FORMAT)
+  link = link.replace('{sheet}', opt.SHEET)
+  link = link.replace('{range}', opt.RANGE)
+  link = link.replace('{headers}', opt.HEADERS)
+  return link
+}
+
+/* EXAMPLE
+{
+  "BASE_URL": "https://docs.google.com/spreadsheets/d/{key}/gviz/tq?tqx=out:{format}&sheet={sheet}&range={range}&headers={headers}",
+  "DOC_KEY": "...",
+  "FORMAT": "csv",
+  "SHEET": "Sheet1",
+  "RANGE": "A:D",
+  "HEADERS": "0"
+}
+//*/
 
 const SYMBOL = {
   COMMA: ',',
@@ -170,17 +192,40 @@ function writeTextFile(filename, data){
 
 function stripHeader(data){
     return data.filter(function(club){
-        return club.code !== HEADER.CODE && club.location !== HEADER.LOCATION && club.title !== HEADER.TITLE
+        return (club.code !== HEADER.CODE) && (club.location !== HEADER.LOCATION) && (club.title !== HEADER.TITLE)
     })
 }
 
 class Application {
-  constructor(args){
+  constructor(args) {
     this.args  = args
     this.files = this.args.slice(2, this.args.length)
   }
 
-  async run(){
+  async runOnline() {
+    let googleDoc = await readTextFile(this.files[0])
+        googleDoc = JSON.parse(googleDoc)
+
+    let date = (new Date()).toLocaleDateString()
+    let outFileName = `[${date}] fan-partner-codes.json`
+
+    try {
+      let link = makeLinkToDoc(googleDoc)
+      let data = await fetch(link)
+          data = await data.buffer()
+          data = data.toString()
+          data = await parseCsv(data)
+          data = CsvJsonConverter.csv2json(data)
+          data = stripHeader(data)
+          data = JSON.stringify(data, null, PRETTY_TAB_SIZE * PRETTY_OUT_JSON)
+      await writeTextFile(outFileName, data)
+      // console.log(data)
+    } catch(err) {
+      console.error(err)
+    }
+  }
+
+  async run() {
     try {
       for(let file of this.files){
         let data = await readTextFile(file)
@@ -218,5 +263,5 @@ class Application {
 
 (function main(args){
   let app = new Application(args)
-  app.run()
+  app.runOnline()
 })(process.argv)

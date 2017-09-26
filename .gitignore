@@ -1,6 +1,8 @@
 node_modules/
+.*
 *~
 fan-codes.*
 fan-partner-codes.*
+*fan-partner-codes.*
 Fan Partner Codes*
 *Fan Partner Codes*

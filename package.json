@@ -10,7 +10,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "csv": "^1.1.1"
+  "dependencies": {
+    "csv": "^1.1.1",
+    "node-fetch": "^1.7.3"
   }
 }
